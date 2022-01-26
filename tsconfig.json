@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "types": ["./types/index.d.ts"]
+    },
+    "outDir": "./dist/",
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "strictPropertyInitialization": false,
+    "allowSyntheticDefaultImports": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "target": "es6",
+    "jsx": "react"
+  },
+  "exclude": ["node_modules"]
+}
