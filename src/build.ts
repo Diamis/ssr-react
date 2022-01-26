@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import webpack from "webpack";
 import { BuildOption } from "types";
 
@@ -10,6 +11,7 @@ export async function buildDev(option: BuildOption) {
 
   const serverCompiler = webpack(webpackServerConfig(option));
   await runCompiler(serverCompiler, true);
+  chalk.green('Compilered server!');
 
   const clientCompiler = webpack(webpackClientConfig(option));
   await runCompiler(clientCompiler, true);
