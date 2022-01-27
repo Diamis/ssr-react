@@ -16,7 +16,7 @@ export const webpackServerConfig = (options: BuildOption) => {
       target: "node",
       devtool: "source-map",
 
-      entry: path.resolve(rootPath, "src", "index.ts"),
+      entry: path.resolve(rootPath, "src", "app.tsx"),
 
       output: {
         path: path.join(buildPath, "server"),
@@ -31,6 +31,6 @@ export const webpackServerConfig = (options: BuildOption) => {
         __filename: false,
       },
     },
-    customWebpackConfig
+    customWebpackConfig.server
   );
 };

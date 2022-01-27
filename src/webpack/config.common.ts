@@ -118,7 +118,6 @@ export const webpackCommonConfig = (options: ConfigOption) => {
 
     plugins: [
       new webpack.DefinePlugin({
-        "process.env": { NODE_ENV: JSON.stringify(process.env.NODE_ENV) },
         isProduction: JSON.stringify(isProduction),
       }),
       new LoadablePlugin({

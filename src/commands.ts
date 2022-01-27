@@ -6,8 +6,9 @@ export const commands = (commandsOptions: CommandsOptions) => {
   const { startDevServer, startProdServer } = commandsOptions;
   const builder = {
     port: { describe: "порт сервера", default: 3000 },
-    host: { describe: "имя хотса", default: "0.0.0.0" },
-    config: { describe: "путь для webpack конфигурации" },
+    host: { describe: "имя хотса", default: "127.0.0.1" },
+    configClient: { describe: "путь для webpack конфигурации клиента" },
+    configServer: { describe: "путь для webpack конфигурации сервера" },
   };
 
   yargs(hideBin(process.argv)).command({

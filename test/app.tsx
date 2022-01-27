@@ -1,5 +1,5 @@
 import React from "react";
 
-export const App: React.FC<{}> = () => {
+export default () => {
   return <div>hello world!!!</div>;
 };

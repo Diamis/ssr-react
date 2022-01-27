@@ -1,7 +1,7 @@
 import path from "path";
 import webpack from "webpack";
 import { BuildOption } from "types";
-import { merge } from "webpack-merge";
+import { mergeWithCustomize, customizeArray } from "webpack-merge";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
 import { webpackCommonConfig } from "./config.common";
@@ -15,7 +15,9 @@ export const webpackClientConfig = (options: BuildOption) => {
     entryPaths.push("webpack-hot-middleware/client");
   }
 
-  return merge(
+  return mergeWithCustomize({
+    customizeArray: customizeArray({ "entry.*": "replace" }),
+  })(
     webpackCommonConfig(options),
     {
       name: "client",
@@ -37,7 +39,13 @@ export const webpackClientConfig = (options: BuildOption) => {
         }),
         !isProduction && new webpack.HotModuleReplacementPlugin(),
       ],
+
+      resolve: {
+        fallback: {
+          fs: false,
+        },
+      },
     },
-    customWebpackConfig
+    customWebpackConfig.client
   );
 };

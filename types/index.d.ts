@@ -16,7 +16,7 @@ export type ConfigOption = {
 };
 
 export type BuildOption = {
-  customWebpackConfig: Record<string, unknown>;
+  customWebpackConfig: CustomWebpackConfigResult;
 } & ConfigOption &
   Omit<CommandArgs, "config">;
 
@@ -29,5 +29,11 @@ export type ConfigServier = {
 
 export type CustomWebpackConfigProps = {
   rootPath: string;
-  configPath: string;
+  configClient?: string;
+  configServer?: string;
+};
+
+export type CustomWebpackConfigResult = {
+  client: Record<string, unknown>;
+  server: Record<string, unknown>;
 };

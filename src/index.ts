@@ -1,3 +1,4 @@
+import rimraf from "rimraf";
 import { BuildOption } from "types";
 
 import { buildDev, buildProd } from "./build";
@@ -9,16 +10,28 @@ import { startDevServer, startProdServer } from "./server";
 export const run = async () => {
   const options = getOptions();
 
+  rimraf.sync(options.buildPath);
+
   commands({
-    startDevServer: async ({ config, ...args }) => {
-      const customWebpackConfig = getCustomWebpackConfig(config);
+    startDevServer: async ({ configClient, configServer, ...args }) => {
+      const customWebpackConfig = getCustomWebpackConfig({
+        rootPath: options.rootPath,
+        configClient,
+        configServer,
+      });
+
       const option: BuildOption = { ...options, ...args, customWebpackConfig };
       const [compiler] = await buildDev(option);
 
       startDevServer(compiler, option);
     },
-    startProdServer: async ({ config, ...args }) => {
-      const customWebpackConfig = getCustomWebpackConfig(config);
+    startProdServer: async ({ configClient, configServer, ...args }) => {
+      const customWebpackConfig = getCustomWebpackConfig({
+        rootPath: options.rootPath,
+        configClient,
+        configServer,
+      });
+
       const option: BuildOption = { ...options, ...args, customWebpackConfig };
 
       await buildProd(option);
@@ -27,5 +40,3 @@ export const run = async () => {
     },
   });
 };
-
-run();

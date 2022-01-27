@@ -1,14 +1,12 @@
 import path from "path";
 import webpack from "webpack";
-import { CustomWebpackConfigProps } from "types";
+import { CustomWebpackConfigProps, CustomWebpackConfigResult } from "types";
 
-// @ts-ignore
-type MultiStats = webpack.compilation.MultiStats;
 type Compiler = webpack.Compiler | webpack.MultiCompiler;
 
 export function runCompiler(compiler: Compiler, watch = false) {
   return new Promise((resolve, reject) => {
-    const cb = (error?: Error, stats?: MultiStats) => {
+    const callback = (error?: any, stats?: any) => {
       if (stats) {
         compiler.close((closeError) => {
           if (closeError) {
@@ -22,22 +20,30 @@ export function runCompiler(compiler: Compiler, watch = false) {
     };
 
     if (watch) {
-      compiler.watch({}, cb);
+      compiler.watch({}, callback);
     } else {
-      compiler.run(cb);
+      compiler.run(callback);
     }
   });
 }
 
 export function getCustomWebpackConfig({
   rootPath,
-  configPath,
-}: CustomWebpackConfigProps): Record<string, unknown> {
-  let customWebpackConfig = {};
-  if (configPath) {
-    const webpackConfigPath = path.join(rootPath, configPath);
-    customWebpackConfig = require(webpackConfigPath).default;
+  configClient,
+  configServer,
+}: CustomWebpackConfigProps): CustomWebpackConfigResult {
+  let client = {};
+  let server = {};
+
+  if (configClient) {
+    const webpackConfigPath = path.join(rootPath, configClient);
+    client = require(webpackConfigPath).default;
   }
 
-  return customWebpackConfig;
+  if (configServer) {
+    const webpackConfigPath = path.join(rootPath, configServer);
+    server = require(webpackConfigPath).default;
+  }
+
+  return { client, server };
 }
