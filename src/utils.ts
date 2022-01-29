@@ -9,10 +9,6 @@ export function watchCompiler(name: string, compiler: webpack.Compiler) {
       logMessage(`[${name}] Compiling`, "info");
     });
 
-    compiler.hooks.failed.tap(name, (error) => {
-      console.log("error", error);
-    });
-
     compiler.hooks.done.tap(name, (stats) => {
       if (!stats.hasErrors()) {
         logMessage(`[${name}] Done`, "info");
