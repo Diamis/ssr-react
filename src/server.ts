@@ -15,7 +15,7 @@ export const startDevServer = (
   option: BuildOption
 ) => {
   const app = express();
-  const devServer = devMiddleware(compiler, { serverSideRender: true });
+  const devServer = devMiddleware(compiler);
 
   app.use(devServer);
   app.use(hotMiddleware(compiler));
@@ -26,9 +26,6 @@ export const startDevServer = (
 
 export const startProdServer = (option: BuildOption) => {
   const app = express();
-  const staticPath = path.join(option.buildPath, "client", "static");
-
-  app.use("/static", express.static(staticPath));
 
   startServer(app, option);
 };
@@ -36,8 +33,14 @@ export const startProdServer = (option: BuildOption) => {
 const startServer = (app: Express, option: BuildOption) => {
   const { port, host } = option;
 
+  const staticPath = path.join(option.buildPath, "client", "static");
+
+  app.use("/favicon.ico", (req, res) => res.send("favicon"));
+  app.use("/static", express.static(staticPath));
+
   app.use(bodyParser.urlencoded());
   app.use(bodyParser.json());
+
   app.get("*", middlewareRenderSSR(option));
 
   app.listen(port, host, () => {

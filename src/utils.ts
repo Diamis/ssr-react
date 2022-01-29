@@ -9,13 +9,17 @@ export function watchCompiler(name: string, compiler: webpack.Compiler) {
       logMessage(`[${name}] Compiling`, "info");
     });
 
+    compiler.hooks.failed.tap(name, (error) => {
+      console.log("error", error);
+    });
+
     compiler.hooks.done.tap(name, (stats) => {
       if (!stats.hasErrors()) {
         logMessage(`[${name}] Done`, "info");
         return res(undefined);
       }
 
-      logMessage(`[${name}] Failed to compile!`, "error");
+      logMessage(`[${name}] Failed to compile!\n${stats.toString()}`, "error");
       return rej(undefined);
     });
 

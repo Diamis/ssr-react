@@ -9,7 +9,6 @@
     "test:prod": "ts-node ./bid/ssr-server prod --config-client=\"./test/webpack.prod.client.js\""
   },
   "dependencies": {
-    "@loadable/babel-plugin": "5.13.2",
     "@loadable/component": "5.15.2",
     "autoprefixer": "10.4.2",
     "body-parser": "^1.19.1",
@@ -37,6 +36,7 @@
     "@babel/preset-react": "7.16.7",
     "@babel/preset-typescript": "7.16.7",
     "@loadable/server": "5.15.2",
+    "@loadable/babel-plugin": "5.13.2",
     "@loadable/webpack-plugin": "5.15.2",
     "@svgr/webpack": "6.2.0",
     "@types/body-parser": "^1.19.2",

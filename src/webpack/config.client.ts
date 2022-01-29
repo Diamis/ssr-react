@@ -2,7 +2,6 @@ import path from "path";
 import webpack from "webpack";
 import { BuildOption } from "types";
 import { mergeWithCustomize, customizeArray } from "webpack-merge";
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
 import { webpackCommonConfig } from "./config.common";
 
@@ -35,12 +34,7 @@ export const webpackClientConfig = (options: BuildOption) => {
         filename: "static/js/build.[contenthash].js",
       },
 
-      plugins: [
-        new MiniCssExtractPlugin({
-          filename: "static/style/build.[name].[contenthash].css",
-        }),
-        !isProduction && new webpack.HotModuleReplacementPlugin(),
-      ],
+      plugins: [!isProduction && new webpack.HotModuleReplacementPlugin()],
 
       resolve: {
         fallback: {

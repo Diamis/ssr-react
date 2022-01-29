@@ -120,6 +120,9 @@ export const webpackCommonConfig = (options: ConfigOption) => {
       new webpack.DefinePlugin({
         isProduction: JSON.stringify(isProduction),
       }),
+      new MiniCssExtractPlugin({
+        filename: "static/style/build.[name].[contenthash].css",
+      }),
       new LoadablePlugin({
         filename: "loadable-stats.json",
         writeToDisk: true,

@@ -25,7 +25,7 @@ export const webpackServerConfig = (options: BuildOption) => {
       output: {
         path: path.join(buildPath, "server"),
         library: { type: "commonjs" },
-        filename: "server.js",
+        filename: "app.js",
       },
 
       externals: ["@loadable/component", nodeExternals()],

@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import fs from "fs";
 import path from "path";
 import React from "react";
 import { BuildOption } from "types";
@@ -22,8 +23,6 @@ export default (option: BuildOption) => {
     const serverExtractor = new ChunkExtractor({ statsFile: fileServer });
     const { default: App } = serverExtractor.requireEntrypoint();
 
-    // @ts-ignore
-    App.test();
     const clientExtractor = new ChunkExtractor({ statsFile: fileClient });
     const view = (
       <StaticRouter location={request.url}>
@@ -43,6 +42,8 @@ export default (option: BuildOption) => {
 
     response.set("content-type", "text/html");
     response.status(200).send(htmlString);
+
+    return response;
   };
 };
 
