@@ -1,49 +1,73 @@
 import path from "path";
+import chalk from "chalk";
 import webpack from "webpack";
-import { CustomWebpackConfigProps, CustomWebpackConfigResult } from "types";
+import { WebpackConfigProps, WebpackConfigResult } from "types";
 
-type Compiler = webpack.Compiler | webpack.MultiCompiler;
+export function watchCompiler(name: string, compiler: webpack.Compiler) {
+  return new Promise((res, rej) => {
+    compiler.hooks.compile.tap(name, () => {
+      logMessage(`[${name}] Compiling`, "info");
+    });
 
-export function runCompiler(compiler: Compiler, watch = false) {
-  return new Promise((resolve, reject) => {
-    const callback = (error?: any, stats?: any) => {
-      if (stats) {
-        compiler.close((closeError) => {
-          if (closeError) {
-            return reject(closeError);
-          }
-          resolve(stats);
-        });
-      } else {
-        reject(error);
+    compiler.hooks.done.tap(name, (stats) => {
+      if (!stats.hasErrors()) {
+        logMessage(`[${name}] Done`, "info");
+        return res(undefined);
       }
-    };
 
-    if (watch) {
-      compiler.watch({}, callback);
-    } else {
-      compiler.run(callback);
-    }
+      logMessage(`[${name}] Failed to compile!`, "error");
+      return rej(undefined);
+    });
+
+    compiler.watch({}, (error, stats) => {
+      if (stats && !stats.hasErrors()) {
+        return;
+      }
+
+      if (error) {
+        logMessage(String(error), "error");
+      }
+    });
   });
 }
 
-export function getCustomWebpackConfig({
+export function getWebpackConfig({
   rootPath,
   configClient,
   configServer,
-}: CustomWebpackConfigProps): CustomWebpackConfigResult {
+}: WebpackConfigProps): WebpackConfigResult {
   let client = {};
   let server = {};
 
-  if (configClient) {
-    const webpackConfigPath = path.join(rootPath, configClient);
-    client = require(webpackConfigPath).default;
+  try {
+    if (configClient) {
+      const webpackConfigPath = path.join(rootPath, configClient);
+      client = require(webpackConfigPath).default as webpack.Configuration;
+    }
+  } catch {
+    logMessage("Not found wepback client config", "warning");
   }
 
-  if (configServer) {
-    const webpackConfigPath = path.join(rootPath, configServer);
-    server = require(webpackConfigPath).default;
+  try {
+    if (configServer) {
+      const webpackConfigPath = path.join(rootPath, configServer);
+      server = require(webpackConfigPath).default as webpack.Configuration;
+    }
+  } catch {
+    logMessage("Not found wepback server config", "warning");
   }
 
   return { client, server };
 }
+
+export const logMessage = (message: string, level = "log") => {
+  const colors = {
+    log: "white",
+    info: "blue",
+    true: "green",
+    error: "red",
+    warning: "yellow",
+  };
+  const color = colors?.[level] || colors.log;
+  console.log(`[${new Date().toISOString()}]`, chalk[color](message));
+};

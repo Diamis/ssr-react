@@ -2,7 +2,7 @@ import path from "path";
 
 export default {
   entry: [
-    path.resolve(process.cwd(), "test", "client.tsx"),
-    "webpack-hot-middleware/client",
+    "webpack-hot-middleware/client?reload=true",
+    path.resolve(process.cwd(), "test", "index.tsx"),
   ],
 };

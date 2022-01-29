@@ -7,6 +7,7 @@ import { ChunkExtractor } from "@loadable/server";
 import { StaticRouter } from "react-router-dom/server";
 
 type Html = {
+  links: string;
   styles: string;
   scripts: string;
   content: string;
@@ -14,40 +15,49 @@ type Html = {
 
 export default (option: BuildOption) => {
   const { buildPath } = option;
+  const fileServer = path.resolve(buildPath, "server", "loadable-stats.json");
+  const fileClient = path.resolve(buildPath, "client", "loadable-stats.json");
+
   return async (request: Request, response: Response) => {
-    const fileServer = path.resolve(buildPath, "server", "loadable-stats.json");
     const serverExtractor = new ChunkExtractor({ statsFile: fileServer });
+    const { default: App } = serverExtractor.requireEntrypoint();
 
-    const fileClient = path.resolve(buildPath, "client", "loadable-stats.json");
+    // @ts-ignore
+    App.test();
     const clientExtractor = new ChunkExtractor({ statsFile: fileClient });
-
-    const res = serverExtractor.requireEntrypoint();
-    const RootApp = res.default;
-
     const view = (
       <StaticRouter location={request.url}>
-        <RootApp />
+        <App />
       </StaticRouter>
     );
 
     const jsx = clientExtractor.collectChunks(view);
 
     const content = renderToString(jsx);
+
+    const links = clientExtractor.getLinkTags();
     const styles = clientExtractor.getStyleTags();
     const scripts = clientExtractor.getScriptTags();
 
-    const htmlString = HTMLString({ styles, scripts, content });
+    const htmlString = HTMLString({ links, styles, scripts, content });
 
-    return response.status(200).send(htmlString);
+    response.set("content-type", "text/html");
+    response.status(200).send(htmlString);
   };
 };
 
-const HTMLString = ({ styles, scripts, content }: Html) => `<!DOCTYPE html>
+const HTMLString = ({
+  links,
+  styles,
+  scripts,
+  content,
+}: Html) => `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>React App</title>
+    ${links}
     ${styles}
   </head>
   <body>

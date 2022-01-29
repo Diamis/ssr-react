@@ -1,12 +1,16 @@
 import path from "path";
 import { BuildOption } from "types";
-import { merge } from "webpack-merge";
+import { mergeWithCustomize, customizeArray } from "webpack-merge";
 import nodeExternals from "webpack-node-externals";
 
 import { webpackCommonConfig } from "./config.common";
 
+const merge = mergeWithCustomize({
+  customizeArray: customizeArray({ "entry.*": "replace" }),
+});
+
 export const webpackServerConfig = (options: BuildOption) => {
-  const { rootPath, buildPath, customWebpackConfig } = options;
+  const { rootPath, buildPath, webpackConfig } = options;
 
   return merge(
     webpackCommonConfig(options),
@@ -24,13 +28,13 @@ export const webpackServerConfig = (options: BuildOption) => {
         filename: "server.js",
       },
 
-      externals: [nodeExternals(), "@loadable/component"],
+      externals: ["@loadable/component", nodeExternals()],
 
       node: {
         __dirname: false,
         __filename: false,
       },
     },
-    customWebpackConfig.server
+    webpackConfig.server
   );
 };

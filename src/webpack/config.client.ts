@@ -6,8 +6,12 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
 import { webpackCommonConfig } from "./config.common";
 
+const merge = mergeWithCustomize({
+  customizeArray: customizeArray({ "entry.*": "replace" }),
+});
+
 export const webpackClientConfig = (options: BuildOption) => {
-  const { isProduction, rootPath, buildPath, customWebpackConfig } = options;
+  const { isProduction, rootPath, buildPath, webpackConfig } = options;
   const entryPaths = [];
 
   entryPaths.push(path.resolve(rootPath, "src", "index.ts"));
@@ -15,9 +19,7 @@ export const webpackClientConfig = (options: BuildOption) => {
     entryPaths.push("webpack-hot-middleware/client");
   }
 
-  return mergeWithCustomize({
-    customizeArray: customizeArray({ "entry.*": "replace" }),
-  })(
+  return merge(
     webpackCommonConfig(options),
     {
       name: "client",
@@ -46,6 +48,6 @@ export const webpackClientConfig = (options: BuildOption) => {
         },
       },
     },
-    customWebpackConfig.client
+    webpackConfig.client
   );
 };

@@ -1,3 +1,5 @@
+import webpack from "webpack";
+
 export type CommandArgs = {
   host: string;
   port: number;
@@ -16,7 +18,7 @@ export type ConfigOption = {
 };
 
 export type BuildOption = {
-  customWebpackConfig: CustomWebpackConfigResult;
+  webpackConfig: WebpackConfigResult;
 } & ConfigOption &
   Omit<CommandArgs, "config">;
 
@@ -27,13 +29,13 @@ export type ConfigServier = {
   isProduction: boolean;
 };
 
-export type CustomWebpackConfigProps = {
+export type WebpackConfigProps = {
   rootPath: string;
   configClient?: string;
   configServer?: string;
 };
 
-export type CustomWebpackConfigResult = {
-  client: Record<string, unknown>;
-  server: Record<string, unknown>;
+export type WebpackConfigResult = {
+  client: webpack.Configuration;
+  server: webpack.Configuration;
 };

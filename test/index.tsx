@@ -8,3 +8,7 @@ loadableReady(() => {
   const root = document.getElementById("root");
   ReactDOM.hydrate(<App />, root);
 });
+
+if (module["hot"]) {
+  module["hot"].accept();
+}
