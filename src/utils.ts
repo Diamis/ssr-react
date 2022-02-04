@@ -3,7 +3,7 @@ import chalk from "chalk";
 import webpack from "webpack";
 import { WebpackConfigProps, WebpackConfigResult } from "types";
 
-export function watchCompiler(name: string, compiler: webpack.Compiler) {
+export function promiseCompiler(name: string, compiler: webpack.Compiler) {
   return new Promise((res, rej) => {
     compiler.hooks.compile.tap(name, () => {
       logMessage(`[${name}] Compiling`, "info");
@@ -18,17 +18,33 @@ export function watchCompiler(name: string, compiler: webpack.Compiler) {
       logMessage(`[${name}] Failed to compile!\n${stats.toString()}`, "error");
       return rej(undefined);
     });
+  });
+}
 
-    compiler.watch({}, (error, stats) => {
-      if (stats && !stats.hasErrors()) {
-        return;
-      }
-
-      if (error) {
-        logMessage(String(error), "error");
+export function watchCompiler(name: string, compiler: webpack.Compiler) {
+  compiler.watch({}, (error, stats) => {
+    Object.keys(require.cache).forEach(function (id) {
+      if (/[\/\\]server[\/\\]/.test(id)) {
+        const filePath = id.split(/[\/\\]server[\/\\]/)[1];
+        delete require.cache[id];
+        logMessage(`[${name}] Clearing /server/${filePath}`, "info");
+      } else if (/[\/\\]client[\/\\]/.test(id)) {
+        const filePath = id.split(/[\/\\]client[\/\\]/)[1];
+        delete require.cache[id];
+        logMessage(`[${name}] Clearing /client/${filePath}`, "info");
       }
     });
+
+    if (stats && !stats.hasErrors()) {
+      return;
+    }
+
+    if (error) {
+      logMessage(String(error), "error");
+    }
   });
+
+  return promiseCompiler(name, compiler);
 }
 
 export function getWebpackConfig({

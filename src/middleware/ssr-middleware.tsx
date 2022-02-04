@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import fs from "fs";
 import path from "path";
 import React from "react";
 import { BuildOption } from "types";
@@ -31,7 +30,6 @@ export default (option: BuildOption) => {
     );
 
     const jsx = clientExtractor.collectChunks(view);
-
     const content = renderToString(jsx);
 
     const links = clientExtractor.getLinkTags();

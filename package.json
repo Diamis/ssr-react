@@ -6,7 +6,7 @@
   "bin": "./bin/ssr-server.js",
   "scripts": {
     "test:dev": "ts-node ./bin/ssr-server dev --config-client=\"./test/webpack.dev.client.js\" --config-server=\"./test/webpack.dev.server.js\"",
-    "test:prod": "ts-node ./bid/ssr-server prod --config-client=\"./test/webpack.prod.client.js\""
+    "test:prod": "ts-node ./bin/ssr-server prod"
   },
   "dependencies": {
     "@loadable/component": "5.15.2",
@@ -35,8 +35,8 @@
     "@babel/preset-env": "7.16.11",
     "@babel/preset-react": "7.16.7",
     "@babel/preset-typescript": "7.16.7",
-    "@loadable/server": "5.15.2",
     "@loadable/babel-plugin": "5.13.2",
+    "@loadable/server": "5.15.2",
     "@loadable/webpack-plugin": "5.15.2",
     "@svgr/webpack": "6.2.0",
     "@types/body-parser": "^1.19.2",

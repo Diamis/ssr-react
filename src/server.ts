@@ -7,6 +7,7 @@ import devMiddleware from "webpack-dev-middleware";
 import hotMiddleware from "webpack-hot-middleware";
 
 import { BuildOption } from "types";
+import { logMessage } from "./utils";
 import middlewareRenderSSR from "./middleware/ssr-middleware";
 import middlewareCrossDev from "./middleware/cross-dev-middleware";
 
@@ -26,7 +27,6 @@ export const startDevServer = (
 
 export const startProdServer = (option: BuildOption) => {
   const app = express();
-
   startServer(app, option);
 };
 
@@ -44,6 +44,8 @@ const startServer = (app: Express, option: BuildOption) => {
   app.get("*", middlewareRenderSSR(option));
 
   app.listen(port, host, () => {
-    console.log(chalk.green(`\nRunning on http://${host}:${port}/\n`));
+    logMessage(`\nRunning on http://${host}:${port}/\n`, "true");
   });
+
+  return app;
 };

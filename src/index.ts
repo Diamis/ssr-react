@@ -5,11 +5,16 @@ import { BuildOption } from "types";
 import { commands } from "./commands";
 import { getOptions } from "./options";
 import { startDevServer, startProdServer } from "./server";
-import { getWebpackConfig, logMessage, watchCompiler } from "./utils";
+import {
+  getWebpackConfig,
+  logMessage,
+  watchCompiler,
+  promiseCompiler,
+} from "./utils";
 import { webpackClientConfig } from "./webpack/config.client";
 import { webpackServerConfig } from "./webpack/config.server";
 
-export const run = async () => {
+export const run = () => {
   const options = getOptions();
   const { rootPath } = options;
 
@@ -40,6 +45,7 @@ export const run = async () => {
       startDevServer(clientCompiler, option);
     },
     startProdServer: async ({ configClient, configServer, ...args }) => {
+      logMessage("Start prod server!", "true");
       const webpackConfig = getWebpackConfig({
         rootPath,
         configClient,
@@ -50,7 +56,10 @@ export const run = async () => {
       const serverConfig = webpackServerConfig(option);
       const clientConfig = webpackClientConfig(option);
 
-      webpack([serverConfig, clientConfig]);
+      const multyCompiler = webpack([serverConfig, clientConfig]);
+
+      await promiseCompiler("server", multyCompiler[0]);
+      await promiseCompiler("client", multyCompiler[1]);
 
       startProdServer(option);
     },
