@@ -1,11 +1,11 @@
 {
-  "name": "ssr-react",
+  "name": "ssr-scripts",
   "version": "1.0.0",
   "license": "MIT",
   "bin": {
-    "ssr-react": "./bin/ssr-react.js"
+    "ssr-scripts": "./bin/ssr-scripts.js"
   },
-  "types": "./lib/ssr-react.d.ts",
+  "types": "./lib/ssr-scripts.d.ts",
   "files": [
     "bin",
     "lib",
