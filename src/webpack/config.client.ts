@@ -1,6 +1,6 @@
 import path from "path";
 import webpack from "webpack";
-import { BuildOption } from "types";
+import { BuildOption } from "lib";
 import { mergeWithCustomize, customizeArray } from "webpack-merge";
 
 import { webpackCommonConfig } from "./config.common";
@@ -13,13 +13,13 @@ export const webpackClientConfig = (options: BuildOption) => {
   const { isProduction, rootPath, buildPath, webpackConfig } = options;
   const entryPaths = [];
 
-  entryPaths.push(path.resolve(rootPath, "src", "index.ts"));
+  entryPaths.push(path.resolve(rootPath, "src", "index"));
   if (!isProduction) {
-    entryPaths.push("webpack-hot-middleware/client");
+    entryPaths.push("webpack-hot-middleware/client?reload=true");
   }
 
-  return merge(
-    webpackCommonConfig(options),
+  const baseWebpackConfig = merge(
+    webpackCommonConfig({ ...options, mode: "client" }),
     {
       name: "client",
 
@@ -31,17 +31,24 @@ export const webpackClientConfig = (options: BuildOption) => {
       output: {
         path: path.join(buildPath, "client"),
         publicPath: "/",
-        filename: "static/js/build.[contenthash].js",
+        filename: "static/js/build.[name].[contenthash].js",
       },
 
-      plugins: [!isProduction && new webpack.HotModuleReplacementPlugin()],
+      plugins: [
+        !isProduction && new webpack.HotModuleReplacementPlugin(),
+      ].filter(Boolean),
 
       resolve: {
         fallback: {
           fs: false,
         },
       },
-    },
-    webpackConfig.client
+    }
   );
+
+  if (typeof webpackConfig.client === "function") {
+    return webpackConfig.client(baseWebpackConfig);
+  }
+
+  return merge(baseWebpackConfig, webpackConfig.client);
 };

@@ -1,5 +1,5 @@
 import path from "path";
-import { BuildOption } from "types";
+import { BuildOption } from "lib";
 import { mergeWithCustomize, customizeArray } from "webpack-merge";
 import nodeExternals from "webpack-node-externals";
 
@@ -11,21 +11,20 @@ const merge = mergeWithCustomize({
 
 export const webpackServerConfig = (options: BuildOption) => {
   const { rootPath, buildPath, webpackConfig } = options;
-
-  return merge(
-    webpackCommonConfig(options),
+  const baseWebpackConfig = merge(
+    webpackCommonConfig({ ...options, mode: "server" }),
     {
       name: "server",
 
       target: "node",
       devtool: "source-map",
 
-      entry: path.resolve(rootPath, "src", "app.tsx"),
+      entry: path.resolve(rootPath, "src", "app"),
 
       output: {
         path: path.join(buildPath, "server"),
-        library: { type: "commonjs" },
-        filename: "app.js",
+        library: { type: "commonjs2" },
+        filename: "[name].js",
       },
 
       externals: ["@loadable/component", nodeExternals()],
@@ -34,7 +33,12 @@ export const webpackServerConfig = (options: BuildOption) => {
         __dirname: false,
         __filename: false,
       },
-    },
-    webpackConfig.server
+    }
   );
+
+  if (typeof webpackConfig.server === "function") {
+    return webpackConfig.server(baseWebpackConfig);
+  }
+
+  return merge(baseWebpackConfig, webpackConfig.server);
 };

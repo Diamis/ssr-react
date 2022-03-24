@@ -1,33 +1,45 @@
 import path from "path";
 import webpack from "webpack";
-import { ConfigOption } from "types";
+import { WebpackOption } from "lib";
 import autoprefixer from "autoprefixer";
 import postcssImport from "postcss-import";
 import LoadablePlugin from "@loadable/webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 
-export const webpackCommonConfig = (options: ConfigOption) => {
-  const { isProduction, rootPath } = options;
-  const styleLoader = (isModule = false) => [
-    MiniCssExtractPlugin.loader,
-    {
-      loader: "css-loader",
-      options: {
-        importLoaders: 2,
-        modules: isModule && {
-          localIdentName: "[name]_[local]_[contenthash:base64:5]",
+export const webpackCommonConfig = (options: WebpackOption) => {
+  const { isProduction, rootPath, mode } = options;
+  const styleLoader = (isModule = false) => {
+    return [
+      {
+        loader: MiniCssExtractPlugin.loader,
+        options: {
+          hmr: !isProduction,
+          reloadAll: true,
         },
       },
-    },
-    {
-      loader: "postcss-loader",
-      options: { postcssOptions: { plugings: [postcssImport, autoprefixer] } },
-    },
-    {
-      loader: "sass-loader",
-    },
-  ];
+      {
+        loader: "css-loader",
+        options: {
+          sourceMap: !isProduction,
+          importLoaders: 2,
+          modules: isModule && {
+            localIdentName: "[name]_[local]_[contenthash:base64:5]",
+          },
+        },
+      },
+      {
+        loader: "postcss-loader",
+        options: {
+          sourceMap: !isProduction,
+          postcssOptions: { plugings: [postcssImport, autoprefixer] },
+        },
+      },
+      {
+        loader: "sass-loader",
+      },
+    ];
+  };
 
   return {
     target: "web",
@@ -118,10 +130,13 @@ export const webpackCommonConfig = (options: ConfigOption) => {
 
     plugins: [
       new webpack.DefinePlugin({
-        isProduction: JSON.stringify(isProduction),
+        isServer: mode === "server",
+        isClient: mode === "client",
+        isProduction,
       }),
       new MiniCssExtractPlugin({
-        filename: "static/style/build.[name].[contenthash].css",
+        filename: "static/style/build.[name].[contenthash:4].css",
+        chunkFilename: "static/style/build.chunk.[name].[contenthash:4].css",
       }),
       new LoadablePlugin({
         filename: "loadable-stats.json",

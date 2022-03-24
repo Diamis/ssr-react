@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import path from "path";
 import React from "react";
-import { BuildOption } from "types";
+import { Helmet, HelmetData } from "react-helmet";
+import { BuildOption } from "lib";
 import { renderToString } from "react-dom/server";
 import { ChunkExtractor } from "@loadable/server";
 import { StaticRouter } from "react-router-dom/server";
@@ -11,6 +12,7 @@ type Html = {
   styles: string;
   scripts: string;
   content: string;
+  helmet: HelmetData;
 };
 
 export default (option: BuildOption) => {
@@ -31,12 +33,13 @@ export default (option: BuildOption) => {
 
     const jsx = clientExtractor.collectChunks(view);
     const content = renderToString(jsx);
+    const helmet = Helmet.renderStatic();
 
     const links = clientExtractor.getLinkTags();
     const styles = clientExtractor.getStyleTags();
     const scripts = clientExtractor.getScriptTags();
 
-    const htmlString = HTMLString({ links, styles, scripts, content });
+    const htmlString = HTMLString({ links, styles, scripts, content, helmet });
 
     response.set("content-type", "text/html");
     response.status(200).send(htmlString);
@@ -48,14 +51,16 @@ export default (option: BuildOption) => {
 const HTMLString = ({
   links,
   styles,
+  helmet,
   scripts,
   content,
 }: Html) => `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>React App</title>
+    ${helmet.title.toString()}
+    ${helmet.link.toString()} 
+    ${helmet.meta.toString()}
     ${links}
     ${styles}
   </head>

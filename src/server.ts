@@ -1,51 +1,66 @@
-import path from "path";
-import chalk from "chalk";
-import webpack from "webpack";
-import bodyParser from "body-parser";
-import express, { Express } from "express";
-import devMiddleware from "webpack-dev-middleware";
-import hotMiddleware from "webpack-hot-middleware";
+import path from 'path'
+import webpack from 'webpack'
+import bodyParser from 'body-parser'
+import express, { Express } from 'express'
+import devMiddleware from 'webpack-dev-middleware'
+import hotMiddleware from 'webpack-hot-middleware'
 
-import { BuildOption } from "types";
-import { logMessage } from "./utils";
-import middlewareRenderSSR from "./middleware/ssr-middleware";
-import middlewareCrossDev from "./middleware/cross-dev-middleware";
+import { Stage } from './types'
+import { logMessage } from './utils/message'
+import { EnvObject } from './utils/parse-env'
+import { ParsePath } from './utils/parse-path'
+import middlewareRenderSSR from './middleware/ssr-middleware'
+import middlewareCrossDev from './middleware/cross-dev-middleware'
 
-export const startDevServer = (
-  compiler: webpack.Compiler,
-  option: BuildOption
-) => {
-  const app = express();
-  const devServer = devMiddleware(compiler);
+type ServerOptions = {
+  paths: ParsePath
+  envs: EnvObject
+}
 
-  app.use(devServer);
-  app.use(hotMiddleware(compiler));
-  app.use(middlewareCrossDev);
+const startServer = (app: Express, options: ServerOptions) => {
+  const {
+    paths: { build },
+    envs: { HOST, PORT },
+  } = options
 
-  devServer.waitUntilValid(() => startServer(app, option));
-};
+  const staticPath = path.join(build, 'client', 'static')
 
-export const startProdServer = (option: BuildOption) => {
-  const app = express();
-  startServer(app, option);
-};
+  app.use('/favicon.ico', (req, res) => res.send('favicon'))
+  app.use('/static', express.static(staticPath))
 
-const startServer = (app: Express, option: BuildOption) => {
-  const { port, host } = option;
+  app.use(bodyParser.urlencoded())
+  app.use(bodyParser.json())
 
-  const staticPath = path.join(option.buildPath, "client", "static");
+  // app.get('*', middlewareRenderSSR(option))
 
-  app.use("/favicon.ico", (req, res) => res.send("favicon"));
-  app.use("/static", express.static(staticPath));
+  app.listen(parseInt(PORT), String(HOST), () => {
+    logMessage(`\nRunning on http://${PORT}:${PORT}/\n`, 'true')
+  })
 
-  app.use(bodyParser.urlencoded());
-  app.use(bodyParser.json());
+  return app
+}
 
-  app.get("*", middlewareRenderSSR(option));
+export type DevServerOptions = {
+  clientCompiler: webpack.Compiler
+  serverOptions: ServerOptions
+}
 
-  app.listen(port, host, () => {
-    logMessage(`\nRunning on http://${host}:${port}/\n`, "true");
-  });
+export type ProdServerOptions = {
+  serverOptions: ServerOptions
+}
 
-  return app;
-};
+export const startDevServer = ({ clientCompiler, serverOptions }: DevServerOptions) => {
+  const app = express()
+  const devServer = devMiddleware(clientCompiler)
+
+  app.use(devServer)
+  app.use(hotMiddleware(clientCompiler))
+  app.use(middlewareCrossDev)
+
+  devServer.waitUntilValid(() => startServer(app, serverOptions))
+}
+
+export const startProdServer = ({ serverOptions }: ProdServerOptions) => {
+  const app = express()
+  startServer(app, serverOptions)
+}

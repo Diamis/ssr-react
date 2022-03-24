@@ -1,67 +1,61 @@
-import rimraf from "rimraf";
-import webpack from "webpack";
-import { BuildOption } from "types";
+import rimraf from 'rimraf'
 
-import { commands } from "./commands";
-import { getOptions } from "./options";
-import { startDevServer, startProdServer } from "./server";
-import {
-  getWebpackConfig,
-  logMessage,
-  watchCompiler,
-  promiseCompiler,
-} from "./utils";
-import { webpackClientConfig } from "./webpack/config.client";
-import { webpackServerConfig } from "./webpack/config.server";
+import * as server from './server'
+import { Stage } from './types'
+import { commands } from './commands'
+import { compilers } from './compilers'
+import { parsePath } from './utils/parse-path'
+import { webpackMake } from './utils/webpack.make'
+import { parseEnv } from './utils/parse-env'
+import { logMessage } from './utils/message'
 
 export const run = () => {
-  const options = getOptions();
-  const { rootPath } = options;
+  const envs = parseEnv('node')
+  const paths = parsePath({ srcPath: envs.PATH_SRC, buildPath: envs.PATH_BUILD })
+  const serverOptions = { envs, paths }
 
-  rimraf.sync(options.buildPath);
+  // очищаем директорию
+  // перед размещением файлов проекта
+  rimraf.sync(paths.build)
 
   commands({
-    startDevServer: async ({ configClient, configServer, ...args }) => {
-      logMessage("Start dev server!", "true");
+    startDevServer: async (args) => {
+      logMessage('Start dev server!', 'true')
+      envs.NODE_ENV = JSON.stringify('development')
 
-      const webpackConfig = getWebpackConfig({
-        rootPath,
-        configClient,
-        configServer,
-      });
+      const stages = [Stage.devClient, Stage.devServer]
+      const configPaths = [args.configClient, args.configServer]
+      const webpackConfigs = webpackMake({ envs, paths, stages, configPaths })
+      const webpackCompilers = compilers(webpackConfigs)
 
-      const option: BuildOption = { ...args, ...options, webpackConfig };
-      const serverConfig = webpackServerConfig(option);
-      const clientConfig = webpackClientConfig(option);
-
-      const serverCompiler = webpack(serverConfig);
-      const clientCompiler = webpack(clientConfig);
-
-      await watchCompiler("server", serverCompiler);
-
-      option.webpackConfig.server = serverConfig;
-      option.webpackConfig.client = clientConfig;
-
-      startDevServer(clientCompiler, option);
+      if (webpackCompilers.client) {
+        server.startDevServer({
+          serverOptions,
+          clientCompiler: webpackCompilers.client.compiler,
+        })
+      }
     },
-    startProdServer: async ({ configClient, configServer, ...args }) => {
-      logMessage("Start prod server!", "true");
-      const webpackConfig = getWebpackConfig({
-        rootPath,
-        configClient,
-        configServer,
-      });
 
-      const option: BuildOption = { ...args, ...options, webpackConfig };
-      const serverConfig = webpackServerConfig(option);
-      const clientConfig = webpackClientConfig(option);
+    startProdServer: async (args) => {
+      logMessage('Start prod server!', 'true')
+      envs.NODE_ENV = JSON.stringify('production')
 
-      const multyCompiler = webpack([serverConfig, clientConfig]);
+      const stages = [Stage.client, Stage.server]
+      const configPaths = [args.configClient, args.configServer]
+      const webpackConfigs = webpackMake({ envs, paths, stages, configPaths })
 
-      await promiseCompiler("server", multyCompiler[0]);
-      await promiseCompiler("client", multyCompiler[1]);
-
-      startProdServer(option);
+      console.dir(webpackConfigs, { depth: 2 })
     },
-  });
-};
+
+    buildProd: async (args) => {
+      logMessage('Build prod!', 'true')
+      envs.NODE_ENV = JSON.stringify('production')
+
+      const stages = [Stage.client, Stage.server]
+      const configPaths = [args.configClient, args.configServer]
+      const webpackConfigs = webpackMake({ envs, paths, stages, configPaths })
+
+      console.dir(webpackConfigs, { depth: 2 })
+    },
+  })
+}
