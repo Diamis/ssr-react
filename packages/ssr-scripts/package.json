@@ -2,14 +2,11 @@
   "name": "ssr-scripts",
   "version": "1.0.0",
   "license": "MIT",
-  "bin": {
-    "ssr-scripts": "./bin/ssr-scripts.js"
-  },
+  "bin": "./bin/ssr-scripts.js",
   "types": "./lib/ssr-scripts.d.ts",
   "files": [
     "bin",
     "lib",
-    "configs",
     "scripts"
   ],
   "dependencies": {

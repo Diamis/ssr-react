@@ -1,6 +1,6 @@
-const chalk = require('chalk')
+'use strict'
 
-;('use strict')
+const chalk = require('chalk')
 
 const STAGE_CLIENT = 'client'
 const STAGE_SERVER = 'server'
@@ -12,6 +12,8 @@ function catchError(message) {
     console.log(chalk.red(message))
     if (err && err.message) {
       console.log(err.message)
+    } else {
+      console.log(err)
     }
     process.exit(1)
   }

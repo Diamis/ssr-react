@@ -20,6 +20,8 @@ dotenvFiles.forEach((dotenvFile) => {
   }
 })
 
+process.env.PROD = NODE_ENV === 'production'
+
 if (!process.env.HOST) {
   process.env.HOST = DEFAULT_HOST
 }
@@ -32,6 +34,7 @@ function getClientEnvironment() {
   const defaultCleintEnvs = {
     HOST: process.env.HOST,
     PORT: process.env.PORT,
+    PROD: process.env.PROD,
     NODE_ENV: process.env.NODE_ENV,
   }
 

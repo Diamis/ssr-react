@@ -6,7 +6,6 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "lerna bootstrap",
     "format": "prettier --write 'packages/*/*.js' 'packages/*/!(node_modules)/**/*.js'"
   },
   "devDependencies": {
@@ -14,11 +13,6 @@
     "jest": "^27.5.1",
     "lerna": "^4.0.0",
     "prettier": "^2.6.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "lint-staged": {
     "*.{js,json,yml,yaml,css,scss,ts,tsx,md}": [
