@@ -1,10 +1,11 @@
 {
-  "name": "ssr-utils",
+  "name": "@react-ssr/utils",
   "version": "1.0.0",
   "license": "MIT",
   "files": [
     "env.js",
     "paths.js",
+    "clear.js",
     "cross-spawn.js",
     "babel-config.js",
     "webpack-rules.js",
@@ -22,6 +23,8 @@
     "@babel/preset-typescript": "^7.16.7",
     "@babel/register": "^7.17.7",
     "@loadable/babel-plugin": "^5.13.2",
+    "@loadable/component": "^5.15.2",
+    "@loadable/webpack-plugin": "^5.15.2",
     "@svgr/webpack": "^6.2.1",
     "autoprefixer": "^10.4.4",
     "babel-loader": "^8.2.4",
@@ -39,10 +42,16 @@
     "postcss-import": "^14.1.0",
     "postcss-loader": "^6.2.1",
     "raw-loader": "^4.0.2",
+    "react-hot-loader": "^4.13.0",
     "react-refresh": "^0.11.0",
     "sass-loader": "^12.6.0",
     "style-loader": "^3.3.1",
     "url-loader": "^4.1.1",
+    "webpack": "^5.70.0",
+    "webpack-hot-middleware": "^2.25.1",
     "yaml-loader": "^0.6.0"
+  },
+  "peerDependencies": {
+    "webpack-hot-middleware": "^2.25.1"
   }
 }

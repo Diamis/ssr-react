@@ -1,6 +1,7 @@
 'use strict'
 
 const chalk = require('chalk')
+const paths = require('./paths')
 
 const STAGE_CLIENT = 'client'
 const STAGE_SERVER = 'server'
@@ -10,11 +11,7 @@ const STAGE_DEV_SERVER = 'dev-server'
 function catchError(message) {
   return (err) => {
     console.log(chalk.red(message))
-    if (err && err.message) {
-      console.log(err.message)
-    } else {
-      console.log(err)
-    }
+    console.log(err)
     process.exit(1)
   }
 }
@@ -37,6 +34,38 @@ function findCompiler(compilers, name) {
     throw new Error(`No webpack compiler found named '${name}', please check your configuration.`)
   }
   return result
+}
+
+function runCompiler(compiler) {
+  return new Promise((resolve, reject) => {
+    compiler.run((error, stats) => {
+      if (error) return reject(error)
+      resolve(stats)
+    })
+  })
+}
+
+function allRunCompiler(compilers) {
+  const all = compilers.map(runCompiler)
+  return Promise.all(all)
+}
+
+function watchCompiler(compiler) {
+  compiler.hooks.compile.tap('compiling', () => {
+    console.log(chalk.green(`Compiling ${paths.buildServer}...`))
+    Object.keys(require.cache).forEach(function (key) {
+      if (key.includes(paths.buildServer) || key.includes[paths.buildClient]) {
+        delete require.cache[key]
+      }
+    })
+  })
+
+  return new Promise((resolve, reject) => {
+    compiler.watch(`watch ${paths.buildServer}`, (error, stats) => {
+      if (error) return reject(error)
+      resolve(stats)
+    })
+  })
 }
 
 /**
@@ -86,7 +115,10 @@ const listenCompiler = (compiler) => {
 
 module.exports = {
   catchError,
+  runCompiler,
   findCompiler,
+  watchCompiler,
+  allRunCompiler,
   listenCompiler,
 
   STAGE_CLIENT,

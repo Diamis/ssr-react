@@ -1,18 +1,19 @@
 {
-  "name": "ssr-scripts",
+  "name": "@react-ssr/scripts",
   "version": "1.0.0",
   "license": "MIT",
-  "bin": "./bin/ssr-scripts.js",
-  "types": "./lib/ssr-scripts.d.ts",
   "files": [
     "bin",
     "lib",
     "scripts"
   ],
+  "bin": {
+    "ssr-scripts": "./bin/ssr-scripts.js"
+  },
+  "types": "./lib/ssr-scripts.d.ts",
   "dependencies": {
-    "ssr-server": "^1.0.0",
-    "ssr-utils": "^1.0.0",
-    "webpack": "^5.70.0"
+    "@react-ssr/server": "^1.0.0",
+    "@react-ssr/utils": "^1.0.0"
   },
   "devDependencies": {
     "react": "^17.0.2",

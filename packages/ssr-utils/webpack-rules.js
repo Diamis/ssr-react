@@ -1,3 +1,5 @@
+'use strict'
+
 const loaders = require('./webpack-loaders')
 
 const styleLoaders = (options) => {

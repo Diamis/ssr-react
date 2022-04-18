@@ -2,10 +2,17 @@
   "name": "ssr-react",
   "private": true,
   "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "ssr-react-scripts": "packages/ssr-scripts/bin/ssr-scripts.js"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "lerna bootstrap",
+    "start": "cd packages/ssr-scripts && node bid/ssr-scripts.js start",
+    "build": "cd packages/ssr-scripts && node bid/ssr-scripts.js build",
     "format": "prettier --write 'packages/*/*.js' 'packages/*/!(node_modules)/**/*.js'"
   },
   "devDependencies": {

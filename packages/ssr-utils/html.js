@@ -1,13 +1,15 @@
-module.exports = function (helmet, content) {
+'use strict'
+
+module.exports = function ({ footer, header, title, children, htmlAttributes, bodyAttributes }) {
   return `<!DOCTYPE html>
-  <html ${helmet.htmlAttributes.toString()}>
+  <html ${htmlAttributes}>
       <head>
-          ${helmet.title.toString()}
-          ${helmet.meta.toString()}
-          ${helmet.link.toString()}
+          ${title}
+          ${header}
       </head>
-      <body ${helmet.bodyAttributes.toString()}>
-          <div id="root">${content}</div>
+      <body ${bodyAttributes}>
+          <div id="root">${children}</div>
       </body>
+      ${footer}
   </html>`
 }

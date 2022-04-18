@@ -7,49 +7,46 @@ process.on('unhandledRejection', (err) => {
   throw err
 })
 
-const chalk = require('chalk')
-const webpack = require('webpack')
-const ssrServer = require('ssr-server')
-const webpackUtils = require('ssr-utils/webpack-utils')
-const createWebpackConfig = require('ssr-utils/webpack-config')
+require('./utils/clear-build')
+require('./utils/create-entry')
+
+const ssrServer = require('@react-ssr/server')
+const paths = require('@react-ssr/utils/paths')
+const utils = require('@react-ssr/utils/webpack-utils')
+const { webpack, makeConfig } = require('@react-ssr/utils/webpack-config')
 
 const PORT = process.env.PORT
 const HOST = process.env.HOST
-const { STAGE_DEV_SERVER, STAGE_DEV_CLIENT } = webpackUtils
-const { catchError, findCompiler, listenCompiler } = webpackUtils
+const { STAGE_DEV_SERVER, STAGE_DEV_CLIENT } = utils
 
-const serverConfig = createWebpackConfig(STAGE_DEV_SERVER)
-const clientConfig = createWebpackConfig(STAGE_DEV_CLIENT)
+const serverConfig = makeConfig(STAGE_DEV_SERVER)
+const clientConfig = makeConfig(STAGE_DEV_CLIENT)
 
-let compilers
+async function start() {
+  let compilers
 
-try {
-  compilers = webpack([serverConfig, clientConfig])
-} catch (err) {
-  const funcError = catchError('Failed to compile.')
-  funcError(err)
+  try {
+    compilers = webpack([serverConfig, clientConfig])
+  } catch (err) {
+    utils.catchError('Failed to compile.')(err)
+  }
+
+  const compilerClient = utils.findCompiler(compilers, STAGE_DEV_CLIENT)
+  const compilerServer = utils.findCompiler(compilers, STAGE_DEV_SERVER)
+
+  await utils.watchCompiler(compilerServer)
+
+  ssrServer({
+    paths,
+    port: PORT,
+    host: HOST,
+    compiler: compilerClient,
+    watchOptions: {
+      writeToDisk: true,
+      serverSideRender: true,
+      publicPath: '/',
+    },
+  })
 }
 
-const compilerServer = findCompiler(compilers, STAGE_DEV_SERVER)
-
-compilerServer.watch({ ignored: /node_modules/ }, (err) => {
-  if (err) throw err
-})
-
-listenCompiler(compilerServer)
-  .then(() => {
-    const compilerClient = findCompiler(compilers, STAGE_DEV_CLIENT)
-    const server = ssrServer({
-      compiler: compilerClient,
-      watchOptions: {
-        writeToDisk: true,
-        stats: clientConfig.stats,
-        publicPath: clientConfig.output.publicPath,
-      },
-    })
-
-    server.listen(PORT, () => {
-      console.log(chalk.green('Server listening at'), chalk.yellow(`http://${HOST}:${PORT}`))
-    })
-  })
-  .catch(catchError('Failed to listenCompiler.'))
+start()

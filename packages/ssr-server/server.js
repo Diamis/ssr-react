@@ -1,40 +1,41 @@
-'use strict'
-
 import chalk from 'chalk'
-import Koa from 'koa'
-import KoaRouter from 'koa-router'
-import koaCompress from 'koa-compress'
-import koaBodyParser from 'koa-bodyparser'
+import express from 'express'
+import bodyParser from 'body-parser'
+import webpackDevMiddleware from 'webpack-dev-middleware'
+import webpackHotMiddleware from 'webpack-hot-middleware'
 
-import devMiddleware from './middlewares/koa-dev-middleware'
-import hotMiddleware from './middlewares/koa-hot-middleware'
-import ssrMiddleware from './middlewares/koa-ssr-middleware'
+import SSRMiddleware from './middlewares/ssr-middleware'
 
-function server(options) {
+function ssrServer(options) {
   console.log(chalk.green('Started server...'))
-  const { compiler, watchOptions, middlewares } = options
+  const { paths, host, port, compiler, watchOptions } = options
 
-  const koaApp = new Koa()
-  const koaRouter = new KoaRouter()
+  let dev
+  const app = new express()
 
-  // if (compiler) {
-  //   koaApp.use(devMiddleware(compiler, watchOptions))
-  //   koaApp.use(hotMiddleware(compiler))
-  // }
-
-  koaApp.use(koaCompress())
-  koaApp.use(koaBodyParser())
-
-  if (Array.isArray(middlewares)) {
-    middlewares.forEach((middleware) => koaApp.use(middleware))
+  if (compiler) {
+    dev = webpackDevMiddleware(compiler, watchOptions)
+    app.use(dev)
+    app.use(webpackHotMiddleware(compiler))
   }
 
-  koaApp.use(ssrMiddleware)
+  app.use(paths.clientPublic, express.static(paths.appBuild))
+  app.use(bodyParser.urlencoded({ extended: false }))
+  app.get('/', SSRMiddleware)
 
-  koaApp.use(koaRouter.routes())
-  koaApp.use(koaRouter.allowedMethods())
+  if (dev) {
+    dev.waitUntilValid(() => {
+      app.listen(port, () => {
+        console.log(chalk.green('Server listening at'), chalk.yellow(`http://${host}:${port}`))
+      })
+    })
+  } else {
+    app.listen(port, () => {
+      console.log(chalk.green('Server listening at'), chalk.yellow(`http://${host}:${port}`))
+    })
+  }
 
-  return koaApp
+  return app
 }
 
-export default server
+export default ssrServer

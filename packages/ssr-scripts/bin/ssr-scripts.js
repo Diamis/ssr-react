@@ -4,7 +4,7 @@
 const SCRIPT_START = 'start'
 const SCRIPT_BUILD = 'build'
 
-const spawn = require('ssr-utils/cross-spawn')
+const spawn = require('@react-ssr/utils/cross-spawn')
 const args = process.argv.slice(2)
 
 const nodeArgs = []
