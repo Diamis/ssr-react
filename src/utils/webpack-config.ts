@@ -7,7 +7,7 @@ import rules from './webpack-rules'
 import { getClientEnvironment, getServerEnvironment } from './env'
 
 export default (stage: Stage): webpack.Configuration => {
-  const styleOptions = { isProd: Boolean(process.env.PROD) }
+  const styleOptions = { isProd: Boolean(process.env.PROD), isExtractPlugin: true }
   const invalidStage = [Stage.CLIENT, Stage.SERVER, Stage.DEV_CLIENT, Stage.DEV_SERVER].every((key) => key !== stage)
 
   if (invalidStage) {
@@ -20,29 +20,44 @@ export default (stage: Stage): webpack.Configuration => {
   }
 
   function getEntry() {
-    const entrys = [require.resolve('@babel/polyfill'), paths.entry]
-    if (stage === Stage.DEV_CLIENT) {
-      entrys.push('webpack-hot-middleware/client')
+    const entrys = []
+    switch (stage) {
+      case Stage.CLIENT:
+        entrys.push(require.resolve('@babel/polyfill'))
+        entrys.push(paths.appEntryClient)
+        break
+      case Stage.DEV_CLIENT:
+        entrys.push(require.resolve('@babel/polyfill'))
+        entrys.push(require.resolve('react-hot-loader/patch'))
+        entrys.push(require.resolve('webpack-hot-middleware/client'))
+        entrys.push(paths.appEntryClient)
+        break
+
+      case Stage.SERVER:
+      case Stage.DEV_SERVER:
+        entrys.push(require.resolve('@babel/polyfill'))
+        entrys.push(paths.appEntryServer)
+        break
     }
     return entrys
   }
-
   function getOutput() {
     switch (stage) {
       case Stage.CLIENT:
       case Stage.DEV_CLIENT:
         return {
-          path: paths.appBuild,
+          path: paths.appBuildClient,
           filename: '[name].js',
           publicPath: '/',
-          library: { type: 'commonjs' },
           chunkFilename: 'chunk-[name].js',
         }
-      default:
+
+      case Stage.SERVER:
+      case Stage.DEV_SERVER:
         return {
-          path: paths.appBuild,
+          path: paths.appBuildServer,
+          library: { type: 'commonjs' },
           filename: '[name]-[contenthash].js',
-          publicPath: 'public/',
           chunkFilename: 'chunk-[name]-[contenthash].js',
         }
     }
@@ -50,7 +65,7 @@ export default (stage: Stage): webpack.Configuration => {
 
   function getPlugins() {
     const plugins = []
-    const styleFileName = 'static/css/[name].[contenthash].css'
+    const styleFileName = 'css/[name].[contenthash].css'
     const providePlugin = {
       'fetch': require.resolve('node-fetch'),
       'global.fetch': require.resolve('node-fetch'),
@@ -70,6 +85,7 @@ export default (stage: Stage): webpack.Configuration => {
       case Stage.DEV_SERVER:
         plugins.push(new webpack.DefinePlugin(getServerEnvironment().stringified))
         plugins.push(new webpack.ProvidePlugin(providePlugin))
+        plugins.push(new MiniCssExtractPlugin({ filename: styleFileName }))
         break
     }
 

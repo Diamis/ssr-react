@@ -1,6 +1,6 @@
 import webpack from 'webpack'
 import express, { Express } from 'express'
-import hotMiddleware from 'webpack-hot-middleware'
+import webpackHotMiddleware from 'webpack-hot-middleware'
 import webpackDevMiddleware from 'webpack-dev-middleware'
 
 import ssrMiddleware from './middlewares/ssr-middleware'
@@ -31,6 +31,7 @@ class Server {
    * @returns Promise
    */
   public runDev = async (compiler: webpack.Compiler) => {
+    const hotMiddleware = webpackHotMiddleware(compiler)
     const devMiddleware = webpackDevMiddleware(compiler, {
       stats: this.webpackConfig.stats,
       writeToDisk: true,
