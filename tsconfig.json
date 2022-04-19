@@ -1,11 +1,8 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "types": ["lib/index.d.ts"]
-    },
-    "outDir": "./dist/",
-    "typeRoots": ["./node_modules/@types", "./lib"],
+    "baseUrl": "./src",
+    "outDir": "./dist",
+    "typeRoots": ["./node_modules/@types", "./types"],
     "strictPropertyInitialization": false,
     "allowSyntheticDefaultImports": true,
     "suppressImplicitAnyIndexErrors": true,
@@ -22,6 +19,6 @@
     "target": "es6",
     "jsx": "react"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "examples"]
+  "include": ["src", "types"],
+  "exclude": ["node_modules", "dist"]
 }
