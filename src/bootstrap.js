@@ -1,4 +1,7 @@
-export default {
+'use strict'
+
+require('@babel/register')({
+  only: [/\.(j|t)sx?/],
   extensions: ['.ts', '.tsx', '.js', '.jsx'],
   plugins: [
     require.resolve('@loadable/babel-plugin'),
@@ -10,4 +13,9 @@ export default {
     require.resolve('@babel/preset-react'),
     require.resolve('@babel/preset-typescript'),
   ],
-}
+})
+
+require('./utils/clear-build')
+require('./utils/create-entry')
+
+require(`./scripts/${process.argv[2]}`)

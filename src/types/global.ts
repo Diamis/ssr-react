@@ -1,8 +1,8 @@
-const enum Stage {
+export enum Stage {
   DEV_CLIENT = 'dev-client',
   DEV_SERVER = 'dev-server',
   SERVER = 'server',
   CLIENT = 'client',
 }
 
-type LoaderOptions = Record<string, string | number | boolean | LoaderOptions>
+export type LoaderOptions = Record<string, string | number | boolean | object>

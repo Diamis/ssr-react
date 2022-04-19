@@ -1,4 +1,8 @@
+import chalk from 'chalk'
 import webpack from 'webpack'
+
+import paths from './paths'
+import { Stage } from '../types/global'
 
 /**
  * handle error
@@ -7,7 +11,7 @@ import webpack from 'webpack'
  */
 export function catchError(message: string) {
   return (err: any) => {
-    console.log(message)
+    console.log(chalk.red(message))
     if (err && err.message) {
       console.log(err.message)
     } else {
@@ -37,12 +41,18 @@ export function findCompiler(compilers: webpack.MultiCompiler | webpack.Compiler
   return result
 }
 
-export function runCompilers(compilers: webpack.MultiCompiler) {
-  const promises = compilers.compilers.map((compiler) => {
-    return new Promise((res, rej) => {
+export function runCompilers({ compilers }: webpack.MultiCompiler) {
+  const promises = compilers.map((compiler) => {
+    return new Promise((resolve, reject) => {
+      compiler.hooks.invalid.tap('invalid', (err) => {
+        console.log(chalk.red('Failed to compile.'))
+        console.log(err)
+        reject(err)
+      })
+
       compiler.run((error, stats) => {
-        if (error) return rej(error)
-        res(stats)
+        if (error) return reject(error)
+        resolve(stats)
       })
     })
   })
@@ -60,13 +70,45 @@ export function watchCompiler(compilers: webpack.MultiCompiler | webpack.Compile
   const compiler = findCompiler(compilers, name)
 
   compiler.hooks.compile.tap('compiling', () => {
-    console.log('Compiling...')
+    console.log(chalk.green(`[${name}] Compiling...`))
+    Object.keys(require.cache).forEach(function (key) {
+      if (key.includes(paths.appBuildServer) || key.includes(paths.appBuildClient)) {
+        delete require.cache[key]
+      }
+    })
   })
 
   return new Promise((resolve, reject) => {
-    compiler.watch({ ignored: /node_modules/ }, (error, state) => {
-      if (error) return reject(error)
-      resolve(state)
+    compiler.hooks.invalid.tap('invalid', (fileName) => {
+      console.log(chalk.red(`[${name}] failed to compile file ${fileName}.`))
+      reject(fileName)
+    })
+
+    compiler.watch({ ignored: /node_modules/ }, (error, stats) => {
+      if (error) {
+        return reject(error)
+      }
+
+      if (stats) {
+        const statsData = stats.toJson({ all: false, errors: true, warnings: true }) as any
+        const isSuccessful = !statsData.errors.length && !statsData.warnings.length
+        if (isSuccessful) {
+          console.log(chalk.green(`[${name}] Compiled successfully!`))
+          return resolve(compiler)
+        }
+
+        if (statsData.errors.length) {
+          console.log(chalk.red(`[${name}] Failed to compile:`))
+          console.log(statsData.errors[0])
+        }
+
+        if (statsData.warnings.length) {
+          console.log(chalk.yellow(`[${name}] Compiled with warnings:`))
+          console.log(statsData.warnings[0])
+        }
+      }
+
+      return reject(stats)
     })
   })
 }

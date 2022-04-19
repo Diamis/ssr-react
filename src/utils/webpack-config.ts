@@ -1,13 +1,17 @@
+import path from 'path'
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
+import LoadablePlugin from '@loadable/webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import webpackNodeExternals from 'webpack-node-externals'
 
 import paths from './paths'
 import rules from './webpack-rules'
+import { Stage, LoaderOptions } from '../types/global'
 import { getClientEnvironment, getServerEnvironment } from './env'
 
 export default (stage: Stage): webpack.Configuration => {
-  const styleOptions = { isProd: Boolean(process.env.PROD), isExtractPlugin: true }
+  const styleOptions: LoaderOptions = { isProd: Boolean(process.env.PROD), isExtractPlugin: true }
   const invalidStage = [Stage.CLIENT, Stage.SERVER, Stage.DEV_CLIENT, Stage.DEV_SERVER].every((key) => key !== stage)
 
   if (invalidStage) {
@@ -28,7 +32,6 @@ export default (stage: Stage): webpack.Configuration => {
         break
       case Stage.DEV_CLIENT:
         entrys.push(require.resolve('@babel/polyfill'))
-        entrys.push(require.resolve('react-hot-loader/patch'))
         entrys.push(require.resolve('webpack-hot-middleware/client'))
         entrys.push(paths.appEntryClient)
         break
@@ -41,15 +44,16 @@ export default (stage: Stage): webpack.Configuration => {
     }
     return entrys
   }
+
   function getOutput() {
     switch (stage) {
       case Stage.CLIENT:
       case Stage.DEV_CLIENT:
         return {
           path: paths.appBuildClient,
-          filename: '[name].js',
+          filename: '[name]-[contenthash].js',
           publicPath: '/',
-          chunkFilename: 'chunk-[name].js',
+          chunkFilename: 'chunk-[name]-[contenthash].js',
         }
 
       case Stage.SERVER:
@@ -64,13 +68,16 @@ export default (stage: Stage): webpack.Configuration => {
   }
 
   function getPlugins() {
-    const plugins = []
+    const plugins: any = []
     const styleFileName = 'css/[name].[contenthash].css'
     const providePlugin = {
       'fetch': require.resolve('node-fetch'),
       'global.fetch': require.resolve('node-fetch'),
+      'window': path.resolve(__dirname, '../mock/window.mock'),
+      'localStorage': path.resolve(__dirname, '../mock/localStorage.mock'),
     }
 
+    plugins.push(new LoadablePlugin())
     switch (stage) {
       case Stage.CLIENT:
         plugins.push(new webpack.DefinePlugin(getClientEnvironment().stringified))
@@ -106,6 +113,15 @@ export default (stage: Stage): webpack.Configuration => {
     }
   }
 
+  function getExternals() {
+    if (stage.includes('server')) {
+      return [webpackNodeExternals()]
+    }
+    return []
+  }
+
+  const hot = [Stage.DEV_CLIENT, Stage.DEV_SERVER].includes(stage)
+  console.log('hot', hot)
   return {
     name: stage,
     mode: getMode(),
@@ -114,16 +130,17 @@ export default (stage: Stage): webpack.Configuration => {
 
     entry: getEntry(),
     output: getOutput(),
+    externals: getExternals(),
 
     module: {
       rules: [
         rules.js({}),
         rules.svg({}, {}),
         rules.raw({}),
-        rules.css(styleOptions),
-        rules.scss(styleOptions),
-        rules.cssModules(styleOptions),
-        rules.scssModules(styleOptions),
+        rules.css(styleOptions, hot),
+        rules.scss(styleOptions, hot),
+        rules.cssModules(styleOptions, hot),
+        rules.scssModules(styleOptions, hot),
         rules.yaml({}),
         rules.fonts({}),
         rules.media({}),
@@ -137,7 +154,7 @@ export default (stage: Stage): webpack.Configuration => {
     resolve: {
       extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
       modules: ['node_modules', paths.appSrc],
-      alias: { '..': paths.appSrc },
+      alias: { '@src': paths.appSrc },
     },
   }
 }

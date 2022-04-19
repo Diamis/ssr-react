@@ -1,5 +1,5 @@
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import babelConfig from './babel-config'
+import { LoaderOptions } from '../types/global'
 
 export default {
   json: (options: LoaderOptions) => ({
@@ -56,7 +56,7 @@ export default {
     }
 
     if (typeof modules === 'object') {
-      modulesOptions = { ...modulesOptions, ...modules }
+      modulesOptions = { ...modulesOptions, ...(modules as object) }
     }
 
     return {
@@ -67,6 +67,9 @@ export default {
       },
     }
   },
+  cssHot: () => ({
+    loader: require.resolve('css-hot-loader'),
+  }),
   postcss: (options: LoaderOptions) => {
     const { isProd, postcssOptions = {}, ...loaderOptions } = options
     return {
@@ -76,7 +79,7 @@ export default {
         sourceMap: !isProd,
         postcssOptions: {
           plugings: [require.resolve('postcss-import'), require.resolve('autoprefixer')],
-          ...postcssOptions,
+          ...(postcssOptions as any),
         },
         ...loaderOptions,
       },
@@ -98,12 +101,21 @@ export default {
       ...options,
     },
   }),
-  js: (options: LoaderOptions) => {
+  js: (options: LoaderOptions = {}) => {
     return {
       loader: require.resolve('babel-loader'),
       options: {
-        presets: options.presets || babelConfig.presets,
-        plugins: options.plugins || babelConfig.plugins,
+        plugins: [
+          require.resolve('@loadable/babel-plugin'),
+          require.resolve('@babel/plugin-transform-runtime'),
+          require.resolve('@babel/plugin-proposal-class-properties'),
+        ],
+        presets: [
+          [require.resolve('@babel/preset-env'), { modules: 'commonjs' }],
+          require.resolve('@babel/preset-react'),
+          require.resolve('@babel/preset-typescript'),
+        ],
+        ...options,
       },
     }
   },

@@ -14,7 +14,10 @@ const script = scriptIndex !== -1 ? args[0] : args[scriptIndex]
 if ([SCRIPT_BUILD, SCRIPT_START].includes(script)) {
   const result = spawn.sync(
     process.execPath,
-    nodeArgs.concat(require.resolve(`../dist/scripts/${script}`)).concat(args.slice(scriptIndex + 1)),
+    nodeArgs
+      .concat(require.resolve(`../src/bootstrap`))
+      .concat(script)
+      .concat(args.slice(scriptIndex + 1)),
     { stdio: 'inherit' }
   )
 
