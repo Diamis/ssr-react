@@ -7,10 +7,11 @@ process.on('unhandledRejection', (error) => {
   throw error
 })
 
-import Server from 'server'
 import webpack from 'webpack'
-import webpackConfig from 'utils/webpack-config'
-import { catchError, findCompiler, watchCompiler } from 'utils/webpack-utils'
+
+import Server from '../server'
+import webpackConfig from '../utils/webpack-config'
+import { catchError, findCompiler, watchCompiler } from '../utils/webpack-utils'
 
 let compilers: webpack.MultiCompiler
 

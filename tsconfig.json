@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["src/*"]
+    },
     "outDir": "./dist",
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./types/*", "./node_modules/@types"],
     "strictPropertyInitialization": false,
     "allowSyntheticDefaultImports": true,
     "suppressImplicitAnyIndexErrors": true,
@@ -17,8 +20,9 @@
     "experimentalDecorators": true,
     "module": "commonjs",
     "target": "es6",
+    "lib": ["es6", "es7", "esnext"],
     "jsx": "react"
   },
-  "include": ["src", "types"],
+  "include": ["src/**/*", "types"],
   "exclude": ["node_modules", "dist"]
 }

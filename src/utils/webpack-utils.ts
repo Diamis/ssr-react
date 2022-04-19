@@ -1,4 +1,3 @@
-import chalk from 'chalk'
 import webpack from 'webpack'
 
 /**
@@ -8,7 +7,7 @@ import webpack from 'webpack'
  */
 export function catchError(message: string) {
   return (err: any) => {
-    console.log(chalk.red(message))
+    console.log(message)
     if (err && err.message) {
       console.log(err.message)
     } else {
@@ -61,7 +60,7 @@ export function watchCompiler(compilers: webpack.MultiCompiler | webpack.Compile
   const compiler = findCompiler(compilers, name)
 
   compiler.hooks.compile.tap('compiling', () => {
-    console.log(chalk.green('Compiling...'))
+    console.log('Compiling...')
   })
 
   return new Promise((resolve, reject) => {

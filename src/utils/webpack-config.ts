@@ -1,20 +1,17 @@
-import chalk from 'chalk'
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 
-const paths = require('ssr-utils/paths')
-const { getClientEnvironment, getServerEnvironment } = require('ssr-utils/env')
-
-const rules = require('./webpack-rules')
-const { STAGE_CLIENT, STAGE_SERVER, STAGE_DEV_CLIENT, STAGE_DEV_SERVER } = require('./webpack-utils')
+import paths from './paths'
+import rules from './webpack-rules'
+import { getClientEnvironment, getServerEnvironment } from './env'
 
 export default (stage: Stage): webpack.Configuration => {
   const styleOptions = { isProd: Boolean(process.env.PROD) }
-  const invalidStage = [STAGE_CLIENT, STAGE_SERVER, STAGE_DEV_CLIENT, STAGE_DEV_SERVER].every((key) => key !== stage)
+  const invalidStage = [Stage.CLIENT, Stage.SERVER, Stage.DEV_CLIENT, Stage.DEV_SERVER].every((key) => key !== stage)
 
   if (invalidStage) {
-    throw Error(chalk.red(`Invalid stage "${stage}"`))
+    throw Error(`Invalid stage "${stage}"`)
   }
 
   function getMode() {
@@ -24,7 +21,7 @@ export default (stage: Stage): webpack.Configuration => {
 
   function getEntry() {
     const entrys = [require.resolve('@babel/polyfill'), paths.entry]
-    if (stage === STAGE_DEV_CLIENT) {
+    if (stage === Stage.DEV_CLIENT) {
       entrys.push('webpack-hot-middleware/client')
     }
     return entrys
@@ -32,8 +29,8 @@ export default (stage: Stage): webpack.Configuration => {
 
   function getOutput() {
     switch (stage) {
-      case STAGE_CLIENT:
-      case STAGE_DEV_CLIENT:
+      case Stage.CLIENT:
+      case Stage.DEV_CLIENT:
         return {
           path: paths.appBuild,
           filename: '[name].js',
@@ -60,17 +57,17 @@ export default (stage: Stage): webpack.Configuration => {
     }
 
     switch (stage) {
-      case STAGE_CLIENT:
+      case Stage.CLIENT:
         plugins.push(new webpack.DefinePlugin(getClientEnvironment().stringified))
         plugins.push(new MiniCssExtractPlugin({ filename: styleFileName }))
         break
-      case STAGE_DEV_CLIENT:
+      case Stage.DEV_CLIENT:
         plugins.push(new webpack.DefinePlugin(getClientEnvironment().stringified))
         plugins.push(new MiniCssExtractPlugin({ filename: styleFileName }))
         plugins.push(new webpack.HotModuleReplacementPlugin())
         break
-      case STAGE_SERVER:
-      case STAGE_DEV_SERVER:
+      case Stage.SERVER:
+      case Stage.DEV_SERVER:
         plugins.push(new webpack.DefinePlugin(getServerEnvironment().stringified))
         plugins.push(new webpack.ProvidePlugin(providePlugin))
         break
@@ -81,9 +78,9 @@ export default (stage: Stage): webpack.Configuration => {
 
   function getOptimization() {
     switch (stage) {
-      case STAGE_DEV_SERVER:
+      case Stage.DEV_SERVER:
         return { minimize: false }
-      case STAGE_SERVER:
+      case Stage.SERVER:
         return { minimize: true, minimizer: [new TerserPlugin()] }
       default:
         return {
@@ -97,25 +94,25 @@ export default (stage: Stage): webpack.Configuration => {
     name: stage,
     mode: getMode(),
     target: stage.includes('server') ? 'node' : 'web',
-    devtool: stage === STAGE_DEV_CLIENT ? 'eval-cheap-module-source-map' : 'source-map',
+    devtool: stage === Stage.DEV_CLIENT ? 'eval-cheap-module-source-map' : 'source-map',
 
     entry: getEntry(),
     output: getOutput(),
 
     module: {
       rules: [
-        rules.js(),
-        rules.svg(),
-        rules.raw(),
+        rules.js({}),
+        rules.svg({}, {}),
+        rules.raw({}),
         rules.css(styleOptions),
         rules.scss(styleOptions),
         rules.cssModules(styleOptions),
         rules.scssModules(styleOptions),
-        rules.yaml(),
-        rules.fonts(),
-        rules.media(),
-        rules.images(),
-        rules.assets(),
+        rules.yaml({}),
+        rules.fonts({}),
+        rules.media({}),
+        rules.images({}),
+        rules.assets({}),
       ],
     },
 
@@ -124,7 +121,7 @@ export default (stage: Stage): webpack.Configuration => {
     resolve: {
       extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
       modules: ['node_modules', paths.appSrc],
-      alias: { '@src': paths.appSrc },
+      alias: { '..': paths.appSrc },
     },
   }
 }

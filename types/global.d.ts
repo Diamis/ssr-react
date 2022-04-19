@@ -1,4 +1,4 @@
-enum Stage {
+const enum Stage {
   DEV_CLIENT = 'dev-client',
   DEV_SERVER = 'dev-server',
   SERVER = 'server',

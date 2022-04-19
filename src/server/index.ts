@@ -1,4 +1,3 @@
-import chalk from 'chalk'
 import webpack from 'webpack'
 import express, { Express } from 'express'
 import hotMiddleware from 'webpack-hot-middleware'
@@ -21,7 +20,7 @@ class Server {
 
   private listenServer = (callback: any) => {
     this.app.listen(this.port, () => {
-      console.log(chalk.green('Server listening at'), chalk.yellow(`http://${this.host}:${this.port}`))
+      console.log(`Server listening at http://${this.host}:${this.port}`)
       callback(this.app)
     })
   }

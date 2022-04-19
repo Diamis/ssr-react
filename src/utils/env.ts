@@ -1,7 +1,7 @@
 'use strict'
 
 import fs from 'fs'
-import paths from 'utils/paths'
+import paths from '../utils/paths'
 
 const NODE_ENV = process.env.NODE_ENV
 const DEFAULT_PORT = '3000'

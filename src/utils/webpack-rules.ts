@@ -1,4 +1,4 @@
-const loaders = require('./webpack-loaders')
+import loaders from './webpack-loaders'
 
 const styleLoaders = (options: LoaderOptions) => {
   const styles = []

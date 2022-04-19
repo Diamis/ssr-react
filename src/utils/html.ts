@@ -2,13 +2,13 @@ type HtmlOptions = {
   head?: string
   body?: string
   title?: string
-  content?: string
+  children?: string
   htmlAttributes?: string
   bodyAttributes?: string
 }
 
 export default function (options: HtmlOptions = {}) {
-  const { title = '', head = '', body = '', content = '', htmlAttributes = '', bodyAttributes = '' } = options
+  const { title = '', head = '', body = '', children = '', htmlAttributes = '', bodyAttributes = '' } = options
 
   return `<!DOCTYPE html>
   <html ${htmlAttributes}>
@@ -17,7 +17,7 @@ export default function (options: HtmlOptions = {}) {
           ${head}
       </head>
       <body ${bodyAttributes}>
-          <div id="root">${content}</div>
+          <div id="root">${children}</div>
           ${body}
       </body>
   </html>`
