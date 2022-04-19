@@ -1,20 +1,23 @@
 import webpack from 'webpack'
+import bodyParser from 'body-parser'
 import express, { Express } from 'express'
 import webpackHotMiddleware from 'webpack-hot-middleware'
 import webpackDevMiddleware from 'webpack-dev-middleware'
 
-import ssrMiddleware from './middlewares/ssr-middleware'
+import SSRMiddleware from './middlewares/ssr-middleware'
 
 class Server {
   app: Express
   host: string
   port: string
+  staticPath: string
   webpackConfig: webpack.Configuration
 
   constructor(webpackConfig: webpack.Configuration) {
     this.app = express()
     this.host = process.env.HOST || '127.0.0.1'
     this.port = process.env.PORT || '3000'
+    this.staticPath = webpackConfig.output?.path as string
     this.webpackConfig = webpackConfig
   }
 
@@ -34,18 +37,16 @@ class Server {
     const hotMiddleware = webpackHotMiddleware(compiler)
     const devMiddleware = webpackDevMiddleware(compiler, {
       stats: this.webpackConfig.stats,
-      writeToDisk: true,
       publicPath: '/',
+      writeToDisk: true,
     })
 
     this.app.use(devMiddleware)
     this.app.use(hotMiddleware)
 
-    if (this.webpackConfig?.output?.path) {
-      this.app.use(express.static(this.webpackConfig.output.path))
-    }
-
-    this.app.get('/', ssrMiddleware)
+    this.app.use('/', express.static(this.staticPath))
+    this.app.use(bodyParser.urlencoded({ extended: false }))
+    this.app.get('/', SSRMiddleware)
 
     return new Promise((resolve) => {
       devMiddleware.waitUntilValid(() => this.listenServer(resolve))
@@ -57,11 +58,9 @@ class Server {
    * @returns Promise
    */
   public runProd = async () => {
-    if (this.webpackConfig?.output?.path) {
-      this.app.use(express.static(this.webpackConfig.output.path))
-    }
-
-    this.app.get('/', ssrMiddleware)
+    this.app.use('/', express.static(this.staticPath))
+    this.app.use(bodyParser.urlencoded({ extended: false }))
+    this.app.get('/', SSRMiddleware)
 
     return new Promise((resolve) => {
       this.listenServer(resolve)
