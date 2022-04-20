@@ -1,17 +1,13 @@
 import loaders from './webpack-loaders'
 import { LoaderOptions } from '../types/global'
 
-const styleLoaders = (options: LoaderOptions, hot = false) => {
+const styleLoaders = (options: LoaderOptions) => {
   const styles = []
   const { isProd, loader, modules, postcssOptions = {} } = options
 
-  if (hot) {
-    styles.push(loaders.cssHot())
-  }
-
   styles.push(loaders.miniCssExtract({}))
   styles.push(loaders.css({ isProd, modules }))
-  styles.push(loaders.postcss({ isProd, ...(postcssOptions as LoaderOptions) }))
+  // styles.push(loaders.postcss({ isProd, ...(postcssOptions as LoaderOptions) }))
 
   if (loader) {
     styles.push(loader)
@@ -63,40 +59,34 @@ export default {
     use: [loaders.file(options)],
   }),
 
-  css: (options: LoaderOptions, hot?: boolean): any => ({
+  css: (options: LoaderOptions): any => ({
     test: /\.css$/,
     exclude: /\.module\.css$/,
-    use: styleLoaders(options, hot),
+    use: styleLoaders(options),
   }),
 
-  cssModules: (options: LoaderOptions, hot?: boolean) => ({
+  cssModules: (options: LoaderOptions) => ({
     test: /\.module\.css$/,
-    use: styleLoaders({ ...options, modules: true }, hot),
+    use: styleLoaders({ ...options, modules: true }),
   }),
 
-  scss: (options: LoaderOptions, hot?: boolean) => ({
+  scss: (options: LoaderOptions) => ({
     test: /\.scss$/,
     exclude: /\.module\.scss$/,
-    use: styleLoaders(
-      {
-        ...options,
-        loader: loaders.scss(options.scssOptions as LoaderOptions),
-        postcssOptions: options.postcssOptions,
-      },
-      hot
-    ),
+    use: styleLoaders({
+      ...options,
+      loader: loaders.scss(options.scssOptions as LoaderOptions),
+      postcssOptions: options.postcssOptions,
+    }),
   }),
 
-  scssModules: (options: LoaderOptions, hot?: boolean) => ({
+  scssModules: (options: LoaderOptions) => ({
     test: /\.module\.scss$/,
-    use: styleLoaders(
-      {
-        ...options,
-        modules: true,
-        loader: loaders.scss(options.scssOptions as LoaderOptions),
-        postcssOptions: options.postcssOptions,
-      },
-      hot
-    ),
+    use: styleLoaders({
+      ...options,
+      modules: true,
+      loader: loaders.scss(options.scssOptions as LoaderOptions),
+      postcssOptions: options.postcssOptions,
+    }),
   }),
 }

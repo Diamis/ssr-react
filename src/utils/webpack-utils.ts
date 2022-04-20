@@ -41,22 +41,51 @@ export function findCompiler(compilers: webpack.MultiCompiler | webpack.Compiler
   return result
 }
 
-export function runCompilers({ compilers }: webpack.MultiCompiler) {
-  const promises = compilers.map((compiler) => {
-    return new Promise((resolve, reject) => {
-      compiler.hooks.invalid.tap('invalid', (err) => {
-        console.log(chalk.red('Failed to compile.'))
-        console.log(err)
-        reject(err)
-      })
-
-      compiler.run((error, stats) => {
-        if (error) return reject(error)
-        resolve(stats)
-      })
-    })
+export function runCompiler(compiler: webpack.Compiler) {
+  const { name = 'webpack' } = compiler
+  compiler.hooks.compile.tap('compiling', () => {
+    console.log(chalk.green(`[${name}] Compiling...`))
   })
 
+  return new Promise((resolve, reject) => {
+    compiler.hooks.invalid.tap('invalid', (fileName) => {
+      console.log(chalk.red(`[${name}] failed to compile file ${fileName}.`))
+      reject(fileName)
+    })
+
+    compiler.run((error, stats) => {
+      if (error) {
+        return reject(error)
+      }
+
+      if (stats) {
+        const statsData = stats.toJson({ all: false, errors: true, warnings: true }) as any
+        const isSuccessful = !statsData.errors.length && !statsData.warnings.length
+        if (isSuccessful) {
+          console.log(chalk.green(`[${name}] Compiled successfully!`))
+          return resolve(compiler)
+        }
+
+        if (statsData.errors.length) {
+          const error = statsData.errors.map((err: Error) => err.message).join('\n')
+          console.log(chalk.red(`[${name}] Failed to compile:`))
+          return reject(error)
+        }
+
+        if (statsData.warnings.length) {
+          console.log(chalk.yellow(`[${name}] Compiled with warnings:`))
+          console.log(statsData.warnings.join('\n'))
+          return resolve(stats)
+        }
+      }
+
+      return reject(stats)
+    })
+  })
+}
+
+export function runCompilers({ compilers }: webpack.MultiCompiler) {
+  const promises = compilers.map(runCompiler)
   return Promise.all(promises)
 }
 
@@ -98,13 +127,15 @@ export function watchCompiler(compilers: webpack.MultiCompiler | webpack.Compile
         }
 
         if (statsData.errors.length) {
+          const error = statsData.errors.map((err: Error) => err.message).join('\n')
           console.log(chalk.red(`[${name}] Failed to compile:`))
-          console.log(statsData.errors[0])
+          return reject(error)
         }
 
         if (statsData.warnings.length) {
           console.log(chalk.yellow(`[${name}] Compiled with warnings:`))
-          console.log(statsData.warnings[0])
+          console.log(statsData.warnings.join('\n'))
+          return resolve(stats)
         }
       }
 

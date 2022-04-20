@@ -2,6 +2,24 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import { LoaderOptions } from '../types/global'
 
 export default {
+  js: (options: LoaderOptions = {}) => {
+    return {
+      loader: require.resolve('babel-loader'),
+      options: {
+        plugins: [
+          !options.isProd && require.resolve('react-refresh/babel'),
+          require.resolve('@loadable/babel-plugin'),
+          require.resolve('@babel/plugin-transform-runtime'),
+          require.resolve('@babel/plugin-proposal-class-properties'),
+        ].filter(Boolean),
+        presets: [
+          [require.resolve('@babel/preset-env'), { modules: 'commonjs' }],
+          require.resolve('@babel/preset-react'),
+          require.resolve('@babel/preset-typescript'),
+        ],
+      },
+    }
+  },
   json: (options: LoaderOptions) => ({
     loader: require.resolve('json-loader'),
     options,
@@ -101,22 +119,4 @@ export default {
       ...options,
     },
   }),
-  js: (options: LoaderOptions = {}) => {
-    return {
-      loader: require.resolve('babel-loader'),
-      options: {
-        plugins: [
-          require.resolve('@loadable/babel-plugin'),
-          require.resolve('@babel/plugin-transform-runtime'),
-          require.resolve('@babel/plugin-proposal-class-properties'),
-        ],
-        presets: [
-          [require.resolve('@babel/preset-env'), { modules: 'commonjs' }],
-          require.resolve('@babel/preset-react'),
-          require.resolve('@babel/preset-typescript'),
-        ],
-        ...options,
-      },
-    }
-  },
 }

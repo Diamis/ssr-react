@@ -10,6 +10,7 @@ class Server {
   app: Express
   host: string
   port: string
+  publicPath: string
   staticPath: string
   webpackConfig: webpack.Configuration
 
@@ -18,6 +19,7 @@ class Server {
     this.host = process.env.HOST || '127.0.0.1'
     this.port = process.env.PORT || '3000'
     this.staticPath = webpackConfig.output?.path as string
+    this.publicPath = webpackConfig.output?.publicPath as string
     this.webpackConfig = webpackConfig
   }
 
@@ -37,14 +39,14 @@ class Server {
     const hotMiddleware = webpackHotMiddleware(compiler)
     const devMiddleware = webpackDevMiddleware(compiler, {
       stats: this.webpackConfig.stats,
-      publicPath: '/',
+      publicPath: this.publicPath,
       writeToDisk: true,
     })
 
     this.app.use(devMiddleware)
     this.app.use(hotMiddleware)
 
-    this.app.use('/', express.static(this.staticPath))
+    this.app.use(this.publicPath, express.static(this.staticPath))
     this.app.use(bodyParser.urlencoded({ extended: false }))
     this.app.get('/', SSRMiddleware)
 
@@ -58,7 +60,7 @@ class Server {
    * @returns Promise
    */
   public runProd = async () => {
-    this.app.use('/', express.static(this.staticPath))
+    this.app.use(this.publicPath, express.static(this.staticPath))
     this.app.use(bodyParser.urlencoded({ extended: false }))
     this.app.get('/', SSRMiddleware)
 

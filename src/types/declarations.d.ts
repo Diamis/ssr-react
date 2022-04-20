@@ -2,6 +2,7 @@
 /// <reference types="react" />
 /// <reference types="react-dom" />
 
+declare module 'cssnano-webpack-plugin'
 declare namespace NodeJS {
   interface ProcessEnv {
     PORT: string

@@ -1,9 +1,10 @@
 import path from 'path'
 import webpack from 'webpack'
-import TerserPlugin from 'terser-webpack-plugin'
+import CssnanoPlugin from 'cssnano-webpack-plugin'
 import LoadablePlugin from '@loadable/webpack-plugin'
-import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import webpackNodeExternals from 'webpack-node-externals'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin'
 
 import paths from './paths'
 import rules from './webpack-rules'
@@ -11,8 +12,9 @@ import { Stage, LoaderOptions } from '../types/global'
 import { getClientEnvironment, getServerEnvironment } from './env'
 
 export default (stage: Stage): webpack.Configuration => {
-  const styleOptions: LoaderOptions = { isProd: Boolean(process.env.PROD), isExtractPlugin: true }
+  const isProd = stage === Stage.CLIENT || stage === Stage.SERVER
   const invalidStage = [Stage.CLIENT, Stage.SERVER, Stage.DEV_CLIENT, Stage.DEV_SERVER].every((key) => key !== stage)
+  const options: LoaderOptions = { stage, isProd }
 
   if (invalidStage) {
     throw Error(`Invalid stage "${stage}"`)
@@ -27,18 +29,15 @@ export default (stage: Stage): webpack.Configuration => {
     const entrys = []
     switch (stage) {
       case Stage.CLIENT:
-        entrys.push(require.resolve('@babel/polyfill'))
         entrys.push(paths.appEntryClient)
         break
       case Stage.DEV_CLIENT:
-        entrys.push(require.resolve('@babel/polyfill'))
         entrys.push(require.resolve('webpack-hot-middleware/client'))
         entrys.push(paths.appEntryClient)
         break
 
       case Stage.SERVER:
       case Stage.DEV_SERVER:
-        entrys.push(require.resolve('@babel/polyfill'))
         entrys.push(paths.appEntryServer)
         break
     }
@@ -51,25 +50,31 @@ export default (stage: Stage): webpack.Configuration => {
       case Stage.DEV_CLIENT:
         return {
           path: paths.appBuildClient,
-          filename: '[name]-[contenthash].js',
-          publicPath: '/',
-          chunkFilename: 'chunk-[name]-[contenthash].js',
+          clean: true,
+          publicPath: paths.publicPathClient,
+          filename: isProd ? '[name]-[contenthash].js' : '[name].js',
+          chunkFilename: isProd ? 'chunk-[name]-[contenthash].js' : 'chunk-[name].js',
         }
 
       case Stage.SERVER:
       case Stage.DEV_SERVER:
         return {
           path: paths.appBuildServer,
-          library: { type: 'commonjs' },
-          filename: '[name]-[contenthash].js',
-          chunkFilename: 'chunk-[name]-[contenthash].js',
+          clean: true,
+          library: { type: 'commonjs2' },
+          publicPath: paths.publicPathServer,
+          filename: isProd ? '[name]-[contenthash].js' : '[name].js',
+          chunkFilename: isProd ? 'chunk-[name]-[contenthash].js' : 'chunk-[name].js',
         }
     }
   }
 
   function getPlugins() {
     const plugins: any = []
-    const styleFileName = 'css/[name].[contenthash].css'
+    const cssExtractOptions = {
+      filename: isProd ? 'css/[name].[contenthash].css' : 'css/[name].css',
+      chunkFilename: isProd ? 'css/[id].[contenthash].css' : 'css/[id].css',
+    }
     const providePlugin = {
       'fetch': require.resolve('node-fetch'),
       'global.fetch': require.resolve('node-fetch'),
@@ -80,19 +85,20 @@ export default (stage: Stage): webpack.Configuration => {
     plugins.push(new LoadablePlugin())
     switch (stage) {
       case Stage.CLIENT:
+        plugins.push(new MiniCssExtractPlugin(cssExtractOptions))
         plugins.push(new webpack.DefinePlugin(getClientEnvironment().stringified))
-        plugins.push(new MiniCssExtractPlugin({ filename: styleFileName }))
         break
       case Stage.DEV_CLIENT:
+        plugins.push(new MiniCssExtractPlugin(cssExtractOptions))
         plugins.push(new webpack.DefinePlugin(getClientEnvironment().stringified))
-        plugins.push(new MiniCssExtractPlugin({ filename: styleFileName }))
         plugins.push(new webpack.HotModuleReplacementPlugin())
+        plugins.push(new ReactRefreshWebpackPlugin())
         break
       case Stage.SERVER:
       case Stage.DEV_SERVER:
+        plugins.push(new MiniCssExtractPlugin(cssExtractOptions))
         plugins.push(new webpack.DefinePlugin(getServerEnvironment().stringified))
         plugins.push(new webpack.ProvidePlugin(providePlugin))
-        plugins.push(new MiniCssExtractPlugin({ filename: styleFileName }))
         break
     }
 
@@ -101,27 +107,25 @@ export default (stage: Stage): webpack.Configuration => {
 
   function getOptimization() {
     switch (stage) {
+      case Stage.DEV_CLIENT:
       case Stage.DEV_SERVER:
         return { minimize: false }
       case Stage.SERVER:
-        return { minimize: true, minimizer: [new TerserPlugin()] }
-      default:
+      case Stage.CLIENT:
         return {
-          minimize: false,
-          splitChunks: { cacheGroups: { default: false, defaultVendors: false } },
+          minimize: true,
+          minimizer: [new CssnanoPlugin()],
         }
     }
   }
 
   function getExternals() {
     if (stage.includes('server')) {
-      return [webpackNodeExternals()]
+      return ['@loadable/component', webpackNodeExternals()]
     }
-    return []
+    return undefined
   }
 
-  const hot = [Stage.DEV_CLIENT, Stage.DEV_SERVER].includes(stage)
-  console.log('hot', hot)
   return {
     name: stage,
     mode: getMode(),
@@ -134,13 +138,13 @@ export default (stage: Stage): webpack.Configuration => {
 
     module: {
       rules: [
-        rules.js({}),
+        rules.js(options),
         rules.svg({}, {}),
         rules.raw({}),
-        rules.css(styleOptions, hot),
-        rules.scss(styleOptions, hot),
-        rules.cssModules(styleOptions, hot),
-        rules.scssModules(styleOptions, hot),
+        rules.css(options),
+        rules.scss(options),
+        rules.cssModules(options),
+        rules.scssModules(options),
         rules.yaml({}),
         rules.fonts({}),
         rules.media({}),
@@ -149,7 +153,8 @@ export default (stage: Stage): webpack.Configuration => {
       ],
     },
 
-    // optimization: getOptimization(),
+    optimization: getOptimization(),
+
     plugins: getPlugins(),
     resolve: {
       extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],

@@ -21,7 +21,6 @@ const clientConfig = webpackConfig(Stage.DEV_CLIENT)
 try {
   compilers = webpack([serverConfig, clientConfig])
 } catch (error) {
-  console.error(error)
   catchError('Failed to compile.')(error)
   process.exit(1)
 }

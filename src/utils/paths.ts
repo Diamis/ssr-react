@@ -16,6 +16,8 @@ const paths = {
   jsConfig: resolveApp('jsconfig.json'),
   packageJson: resolveApp('package.json'),
   yarnLockFile: resolveApp('yarn.lock'),
+  publicPathClient: ['/', buildPath, 'client/'].join('/').replace(/\/\//g, '/'),
+  publicPathServer: ['/', buildPath, 'server/'].join('/').replace(/\/\//g, '/'),
 
   appEntryClient: '',
   appEntryServer: '',

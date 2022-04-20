@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict'
 
+const SCRIPT_PROD = 'prod'
 const SCRIPT_START = 'start'
 const SCRIPT_BUILD = 'build'
 
@@ -8,10 +9,10 @@ const spawn = require('cross-spawn')
 const args = process.argv.slice(2)
 
 const nodeArgs = []
-const scriptIndex = args.findIndex((s) => s === SCRIPT_BUILD || s === SCRIPT_START)
+const scriptIndex = args.findIndex((s) => s === SCRIPT_PROD || s === SCRIPT_START)
 const script = scriptIndex !== -1 ? args[0] : args[scriptIndex]
 
-if ([SCRIPT_BUILD, SCRIPT_START].includes(script)) {
+if ([SCRIPT_PROD, SCRIPT_START].includes(script)) {
   const result = spawn.sync(
     process.execPath,
     nodeArgs

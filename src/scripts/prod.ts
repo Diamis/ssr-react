@@ -15,8 +15,8 @@ import { catchError, runCompilers } from '../utils/webpack-utils'
 
 let compilers: webpack.MultiCompiler
 
-const serverConfig = webpackConfig(Stage.DEV_SERVER)
-const clientConfig = webpackConfig(Stage.DEV_CLIENT)
+const serverConfig = webpackConfig(Stage.SERVER)
+const clientConfig = webpackConfig(Stage.CLIENT)
 
 try {
   compilers = webpack([serverConfig, clientConfig])
